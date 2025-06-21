@@ -2,3 +2,10 @@ opencv-python
 numpy
 matplotlib
 torchvision
+fastapi
+uvicorn
+python-multipart
+jinja2
+pillow
+uvicorn[standard]
+
