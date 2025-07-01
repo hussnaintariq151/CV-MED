@@ -44,6 +44,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 async def home(request: Request):
     return templates.TemplateResponse("intro.html", {"request": request})
 
+@app.get("/upload-page", response_class=HTMLResponse)
+async def upload_page(request: Request):
+    return templates.TemplateResponse("upload_page.html", {"request": request})
+
 
 @app.post("/upload-video/")
 async def upload_and_detect(file: UploadFile = File(...)):

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload Eye Video | TBUT Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0d1b2a;
+      color: #e0e8ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 🔄 Animated Background */
+    .background-slideshow {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .background-slideshow img {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      animation: fadeSlide 15s infinite;
+    }
+
+    .background-slideshow img:nth-child(1) { animation-delay: 0s; }
+    .background-slideshow img:nth-child(2) { animation-delay: 3s; }
+    .background-slideshow img:nth-child(3) { animation-delay: 6s; }
+    .background-slideshow img:nth-child(4) { animation-delay: 9s; }
+    .background-slideshow img:nth-child(5) { animation-delay: 12s; }
+
+    @keyframes fadeSlide {
+      0%   { opacity: 0; }
+      10%  { opacity: 1; }
+      30%  { opacity: 1; }
+      40%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    h1 {
+      margin-top: 30px;
+      z-index: 2;
+    }
+
+    /* Upload box slightly lower and frosted */
+    .upload-box {
+      margin-top: 80px;
+      background: linear-gradient(rgba(13, 27, 42, 0.7), rgba(13, 27, 42, 0.7)),
+                  url('/static/images/eye-bg.jpg') center/cover no-repeat;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      backdrop-filter: brightness(0.7);
+      color: white;
+      z-index: 2;
+    }
+
+    /* Stylish file input */
+    input[type="file"] {
+      display: none;
+    }
+
+    label[for="fileInput"] {
+      display: inline-block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background-color: #1b263b;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    label[for="fileInput"]:hover {
+      background-color: #415a77;
+    }
+
+    button {
+      padding: 12px 24px;
+      background-color: #ff4b4b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #d73333;
+    }
+
+    /* Eye-catching result box */
+    #result {
+      margin-top: 30px;
+      padding: 20px;
+      font-size: 1.1rem;
+      color: #e0e8ff;
+      background: rgba(36, 59, 85, 0.8);
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      position: relative;
+      animation: fadeIn 1s ease-in;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    #result.success {
+      border-image: linear-gradient(45deg, #6fff9f, #22e6cc) 1;
+    }
+
+    #result.error {
+      border-image: linear-gradient(45deg, #ff4b4b, #ffce00) 1;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    #themeToggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #ffce00;
+      color: #000;
+      font-weight: bold;
+      z-index: 10;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 🔁 Background Slideshow -->
+  <div class="background-slideshow">
+    <img src="/static/images/eye1.jpg" alt="eye 1">
+    <img src="/static/images/eye2.jpg" alt="eye 2">
+    <img src="/static/images/eye3.jpg" alt="eye 3">
+    <img src="/static/images/eye4.jpg" alt="eye 4">
+    <img src="/static/images/eye5.jpg" alt="eye 5">
+  </div>
+
+  <button id="themeToggle" onclick="toggleTheme()">Toggle Theme</button>
+
+  <h1>Upload Eye Video for TBUT Detection</h1>
+
+  <div class="upload-box">
+    <form id="uploadForm">
+      <label for="fileInput">📂 Choose Eye Video</label>
+      <input type="file" name="file" id="fileInput" accept="video/*" required />
+      <button type="submit">Analyze Video</button>
+    </form>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const fileInput = document.getElementById("fileInput");
+    const resultDiv = document.getElementById("result");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      resultDiv.innerHTML = "⏳ Processing...";
+      resultDiv.className = "";
+      
+      try {
+        const res = await fetch("/upload-video/", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.detail || "Upload failed");
+        }
+
+        const data = await res.json();
+        resultDiv.className = "success";
+        resultDiv.innerHTML = `✅ <strong>${data.message}</strong><br>
+          ⏱️ TBUT: <strong>${data.tbut_seconds || "N/A"}</strong> seconds<br>
+          🎞️ Frames Processed: <strong>${data.total_frames}</strong>`;
+      } catch (err) {
+        resultDiv.className = "error";
+        resultDiv.innerHTML = `❌ <strong>Error:</strong> ${err.message}`;
+      }
+    });
+  </script>
+
+  <!-- 🌗 Theme Toggle -->
+  <script>
+    function toggleTheme() {
+      const isDark = document.body.style.backgroundColor === "rgb(13, 27, 42)";
+      document.body.style.backgroundColor = isDark ? "#f4f4f4" : "#0d1b2a";
+      document.body.style.color = isDark ? "#222" : "#e0e8ff";
+    }
+  </script>
+</body>
+
+</html>
